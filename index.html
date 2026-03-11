@@ -573,7 +573,10 @@ function viewPractice() {
       words: [],
       index: 0,
       direction: 'wordFirst',
+      mode: 'flashcard',
       revealed: false,
+      typedAnswer: '',
+      typedChecked: false,
       correct: 0,
       missed: [],
       phase: 'setup',
@@ -582,6 +585,7 @@ function viewPractice() {
 
   if (practiceCtx.phase === 'setup')  return viewPracticeSetup(quiz);
   if (practiceCtx.phase === 'result') return viewPracticeResult(quiz);
+  if (practiceCtx.mode === 'typed')   return viewPracticeTyped(quiz);
   return viewPracticeQuestion(quiz);
 }
 
@@ -594,6 +598,13 @@ function viewPracticeSetup(quiz) {
         <div class="toggle-group" id="dirToggle">
           <div class="toggle-opt active" onclick="setDir('wordFirst',this)">Ord → Översättning</div>
           <div class="toggle-opt" onclick="setDir('translationFirst',this)">Översättning → Ord</div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Läge</label>
+        <div class="toggle-group" id="modeToggle">
+          <div class="toggle-opt active" onclick="setMode('flashcard',this)">Flashkort</div>
+          <div class="toggle-opt" onclick="setMode('typed',this)">Skriv svar</div>
         </div>
       </div>
       <button class="btn btn-primary btn-full btn-lg" onclick="startPractice()">Starta</button>
@@ -676,6 +687,68 @@ function viewPracticeResult(quiz) {
   </div></main>`;
 }
 
+function viewPracticeTyped(quiz) {
+  const { words, index, direction, typedChecked, typedAnswer } = practiceCtx;
+  const word  = words[index];
+  const front = direction === 'wordFirst' ? word.word : word.translation;
+  const back  = direction === 'wordFirst' ? word.translation : word.word;
+  const lbl   = direction === 'wordFirst' ? 'Vad är översättningen?' : 'Vad är originalordet?';
+  const pct   = (index / words.length) * 100;
+
+  let answerArea;
+  if (!typedChecked) {
+    answerArea = `
+      <input type="text" id="typedInput" value="${esc(typedAnswer)}"
+        placeholder="Skriv svaret…"
+        style="width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:10px;
+          font-size:18px;font-family:inherit;margin-top:16px;text-align:center;"
+        oninput="practiceCtx.typedAnswer=this.value"
+        onkeydown="if(event.key==='Enter')submitTyped()">
+      <button class="btn btn-primary btn-full btn-lg" style="margin-top:12px" onclick="submitTyped()">Kontrollera</button>`;
+  } else {
+    const correct = typedAnswer.trim().toLowerCase() === back.trim().toLowerCase();
+    const borderColor = correct ? 'var(--success)' : 'var(--danger)';
+    const bg = correct ? 'var(--success-light)' : 'var(--danger-light)';
+    const label = correct ? '✓ Rätt!' : '✗ Fel';
+    const labelColor = correct ? 'var(--success)' : 'var(--danger)';
+    answerArea = `
+      <input type="text" value="${esc(typedAnswer)}" disabled
+        style="width:100%;padding:12px 14px;border:2px solid ${borderColor};border-radius:10px;
+          font-size:18px;font-family:inherit;margin-top:16px;text-align:center;background:${bg};">
+      <div style="text-align:center;font-weight:700;color:${labelColor};margin:10px 0 4px">${label}</div>
+      ${!correct ? `<div style="text-align:center;color:var(--text-muted);font-size:15px;margin-bottom:12px">Rätt svar: <strong>${esc(back)}</strong></div>` : '<div style="margin-bottom:12px"></div>'}
+      <button class="btn btn-primary btn-full btn-lg" onclick="markTyped(${correct})">Nästa →</button>`;
+  }
+
+  return header({ title: `${index+1} / ${words.length}`, back: { view: 'detail', label: esc(quiz.name), params: { id: quiz.id } } }) +
+  `<main class="main"><div class="container">
+    <div class="progress-wrap"><div class="progress-fill" style="width:${pct}%"></div></div>
+    <div class="card card-body" style="text-align:center;padding:24px">
+      <div class="fc-label">${lbl}</div>
+      <div class="fc-word">${esc(front)}</div>
+      ${answerArea}
+    </div>
+  </div></main>`;
+}
+
+function submitTyped() {
+  const input = document.getElementById('typedInput');
+  if (input) practiceCtx.typedAnswer = input.value;
+  practiceCtx.typedChecked = true;
+  render();
+}
+
+function markTyped(correct) {
+  const w = practiceCtx.words[practiceCtx.index];
+  if (correct) practiceCtx.correct++;
+  else practiceCtx.missed.push(w);
+  practiceCtx.index++;
+  practiceCtx.typedAnswer  = '';
+  practiceCtx.typedChecked = false;
+  if (practiceCtx.index >= practiceCtx.words.length) practiceCtx.phase = 'result';
+  render();
+}
+
 // ─── PRACTICE ACTIONS ─────────────────────────────────────────────────────────
 
 function setDir(dir, el) {
@@ -684,14 +757,22 @@ function setDir(dir, el) {
   el.classList.add('active');
 }
 
+function setMode(mode, el) {
+  practiceCtx.mode = mode;
+  document.querySelectorAll('#modeToggle .toggle-opt').forEach(o => o.classList.remove('active'));
+  el.classList.add('active');
+}
+
 function startPractice() {
   const quiz = S.quizzes.find(q => q.id === practiceCtx.quizId);
-  practiceCtx.words    = shuf([...quiz.words]);
-  practiceCtx.index    = 0;
-  practiceCtx.correct  = 0;
-  practiceCtx.missed   = [];
-  practiceCtx.revealed = false;
-  practiceCtx.phase    = 'quiz';
+  practiceCtx.words        = shuf([...quiz.words]);
+  practiceCtx.index        = 0;
+  practiceCtx.correct      = 0;
+  practiceCtx.missed       = [];
+  practiceCtx.revealed     = false;
+  practiceCtx.typedAnswer  = '';
+  practiceCtx.typedChecked = false;
+  practiceCtx.phase        = 'quiz';
   render();
 }
 
@@ -711,12 +792,14 @@ function mark(correct) {
 }
 
 function retryMissed() {
-  practiceCtx.words    = shuf([...practiceCtx.missed]);
-  practiceCtx.index    = 0;
-  practiceCtx.correct  = 0;
-  practiceCtx.missed   = [];
-  practiceCtx.revealed = false;
-  practiceCtx.phase    = 'quiz';
+  practiceCtx.words        = shuf([...practiceCtx.missed]);
+  practiceCtx.index        = 0;
+  practiceCtx.correct      = 0;
+  practiceCtx.missed       = [];
+  practiceCtx.revealed     = false;
+  practiceCtx.typedAnswer  = '';
+  practiceCtx.typedChecked = false;
+  practiceCtx.phase        = 'quiz';
   render();
 }
 
