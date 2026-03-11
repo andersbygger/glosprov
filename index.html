@@ -325,7 +325,7 @@ Returnera ENBART JSON.` },
 
 function header({ title, back, rightHtml = '<div style="width:36px"></div>' }) {
   const backEl = back
-    ? `<button class="back-btn" onclick="go('${back.view}',${JSON.stringify(back.params||{})})">&#8592; ${esc(back.label)}</button>`
+    ? `<button class="back-btn" onclick="go('${back.view}',${JSON.stringify(back.params||{}).replace(/"/g,"'")})">&#8592; ${esc(back.label)}</button>`
     : `<div style="width:80px"></div>`;
   return `<header class="header">
     <div class="container">${backEl}<h1>${title}</h1>${rightHtml}</div>
