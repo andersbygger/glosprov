@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Glosprov</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary: #5B5BD6;
+      --primary-light: #EDEDFC;
+      --primary-dark: #3E3E9E;
+      --success: #16A34A;
+      --success-light: #DCFCE7;
+      --danger: #DC2626;
+      --danger-light: #FEE2E2;
+      --bg: #F4F5F7;
+      --card: #FFFFFF;
+      --text: #111827;
+      --text-muted: #6B7280;
+      --border: #E5E7EB;
+      --radius: 12px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .container { max-width: 480px; margin: 0 auto; padding: 0 16px; }
+
+    /* Header */
+    .header {
+      background: var(--primary);
+      color: white;
+      padding: 14px 0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 8px rgba(91,91,214,0.3);
+    }
+    .header .container { display: flex; align-items: center; justify-content: space-between; }
+    .header h1 { font-size: 20px; font-weight: 700; }
+
+    .back-btn {
+      background: rgba(255,255,255,0.2);
+      border: none;
+      color: white;
+      padding: 7px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .back-btn:hover { background: rgba(255,255,255,0.3); }
+
+    .header-icon-btn {
+      background: rgba(255,255,255,0.2);
+      border: none;
+      color: white;
+      width: 36px; height: 36px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 18px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .header-icon-btn:hover { background: rgba(255,255,255,0.3); }
+
+    /* Layout */
+    .main { padding: 20px 0 60px; }
+    .stack { display: flex; flex-direction: column; gap: 12px; }
+
+    /* Card */
+    .card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+    .card-body { padding: 16px; }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 12px 20px; border-radius: 10px; border: none;
+      font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.15s;
+    }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-success { background: var(--success); color: white; }
+    .btn-success:hover { filter: brightness(0.9); }
+    .btn-danger { background: var(--danger); color: white; }
+    .btn-danger:hover { filter: brightness(0.9); }
+    .btn-ghost { background: transparent; color: var(--text-muted); }
+    .btn-ghost:hover { background: var(--border); }
+    .btn-outline { background: transparent; color: var(--primary); border: 2px solid var(--primary); }
+    .btn-outline:hover { background: var(--primary-light); }
+    .btn-full { width: 100%; }
+    .btn-lg { padding: 15px 20px; font-size: 16px; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* Form */
+    .form-group { margin-bottom: 16px; }
+    label {
+      display: block; font-size: 12px; font-weight: 700; color: var(--text-muted);
+      margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    input[type="text"], input[type="password"] {
+      width: 100%; padding: 11px 14px; border: 2px solid var(--border);
+      border-radius: 10px; font-size: 15px; font-family: inherit;
+      transition: border-color 0.15s; background: white; color: var(--text);
+    }
+    input:focus { outline: none; border-color: var(--primary); }
+
+    /* Alert */
+    .alert { padding: 12px 14px; border-radius: 10px; font-size: 14px; margin-bottom: 12px; }
+    .alert-warning { background: #FEF3C7; color: #92400E; }
+    .alert-error { background: var(--danger-light); color: #7F1D1D; }
+    .alert-success { background: var(--success-light); color: #14532D; }
+
+    /* Quiz list */
+    .quiz-item {
+      background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow);
+      padding: 16px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s;
+    }
+    .quiz-item:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    .quiz-item-name { font-size: 17px; font-weight: 700; margin-bottom: 4px; }
+    .quiz-item-meta { font-size: 13px; color: var(--text-muted); }
+
+    /* Empty state */
+    .empty-state { text-align: center; padding: 48px 20px; color: var(--text-muted); }
+    .empty-icon { font-size: 52px; margin-bottom: 16px; }
+    .empty-title { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+
+    /* Upload */
+    .upload-area {
+      border: 2px dashed var(--border); border-radius: var(--radius);
+      padding: 40px 20px; text-align: center; cursor: pointer;
+      transition: all 0.2s; background: var(--card); display: block;
+    }
+    .upload-area:hover { border-color: var(--primary); background: var(--primary-light); }
+    .upload-icon { font-size: 44px; margin-bottom: 12px; }
+    .upload-text { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+    .upload-sub { font-size: 13px; color: var(--text-muted); }
+
+    /* Preview */
+    .image-preview {
+      width: 100%; border-radius: var(--radius);
+      max-height: 280px; object-fit: contain; background: #f0f0f0;
+    }
+
+    /* Loading */
+    .loading { text-align: center; padding: 40px 20px; }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid var(--border); border-top-color: var(--primary);
+      border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Word edit list */
+    .word-list { display: flex; flex-direction: column; gap: 8px; }
+    .word-item { display: flex; align-items: center; gap: 8px; }
+    .word-item input {
+      flex: 1; padding: 9px 10px; border: 1px solid var(--border);
+      border-radius: 8px; font-size: 14px; font-family: inherit; background: white;
+    }
+    .word-item input:focus { outline: none; border-color: var(--primary); }
+    .word-sep { color: var(--text-muted); flex-shrink: 0; font-size: 16px; }
+    .word-del-btn {
+      background: none; border: none; cursor: pointer;
+      color: var(--danger); font-size: 20px; padding: 4px;
+      line-height: 1; flex-shrink: 0; border-radius: 4px;
+    }
+    .word-del-btn:hover { background: var(--danger-light); }
+
+    /* Word detail list */
+    .word-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 11px 0; border-bottom: 1px solid var(--border);
+    }
+    .word-row:last-child { border-bottom: none; }
+    .word-orig { font-weight: 600; font-size: 15px; }
+    .word-trans { font-size: 14px; color: var(--text-muted); }
+
+    /* Practice */
+    .progress-wrap { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; margin-bottom: 8px; }
+    .progress-fill { height: 100%; background: var(--primary); border-radius: 3px; transition: width 0.3s; }
+    .counter { text-align: center; font-size: 14px; color: var(--text-muted); margin-bottom: 16px; }
+
+    .flashcard {
+      min-height: 210px; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      cursor: pointer; user-select: none; padding: 32px 24px; text-align: center;
+    }
+    .fc-label {
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 12px;
+    }
+    .fc-word { font-size: 30px; font-weight: 800; line-height: 1.2; margin-bottom: 6px; }
+    .fc-tap-hint { font-size: 13px; color: var(--text-muted); }
+    .fc-divider { width: 40px; height: 2px; background: var(--border); margin: 16px auto; }
+    .fc-answer { font-size: 24px; font-weight: 700; color: var(--primary); }
+
+    .practice-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+
+    /* Score */
+    .score-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+    .score-box { padding: 16px; border-radius: var(--radius); text-align: center; }
+    .score-correct { background: var(--success-light); }
+    .score-missed { background: var(--danger-light); }
+    .score-num { font-size: 40px; font-weight: 800; }
+    .score-lbl { font-size: 13px; color: var(--text-muted); font-weight: 600; margin-top: 2px; }
+
+    /* Toggle */
+    .toggle-group { display: flex; background: var(--bg); border-radius: 10px; padding: 4px; }
+    .toggle-opt {
+      flex: 1; padding: 9px 8px; text-align: center; cursor: pointer;
+      border-radius: 8px; font-size: 13px; font-weight: 600;
+      color: var(--text-muted); transition: all 0.15s;
+    }
+    .toggle-opt.active { background: white; color: var(--primary); box-shadow: var(--shadow); }
+
+    /* Badge */
+    .badge { display: inline-flex; align-items: center; padding: 3px 8px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+    .badge-primary { background: var(--primary-light); color: var(--primary); }
+  </style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+// ─── STATE ────────────────────────────────────────────────────────────────────
+
+const S = {
+  view: 'home',
+  params: {},
+  apiKey: localStorage.getItem('gp_key') || '',
+  quizzes: JSON.parse(localStorage.getItem('gp_quizzes') || '[]'),
+};
+
+let practiceCtx = null;   // active practice session
+let tempWords   = [];     // words being edited in new-quiz flow
+
+function persist() {
+  localStorage.setItem('gp_key',    S.apiKey);
+  localStorage.setItem('gp_quizzes', JSON.stringify(S.quizzes));
+}
+
+function go(view, params = {}) {
+  S.view = view; S.params = params; render();
+}
+
+// ─── UTILS ───────────────────────────────────────────────────────────────────
+
+const uid  = () => Date.now().toString(36) + Math.random().toString(36).slice(2);
+const esc  = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const fmt  = iso => new Date(iso).toLocaleDateString('sv-SE', {year:'numeric',month:'short',day:'numeric'});
+const shuf = a => { for (let i=a.length-1;i>0;i--) { const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]; } return a; };
+
+function toast(msg, type = 'dark') {
+  const colors = { dark: '#111827', success: '#16A34A', error: '#DC2626' };
+  const t = document.createElement('div');
+  t.style.cssText = `position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(8px);
+    background:${colors[type]||colors.dark};color:white;padding:10px 20px;border-radius:8px;
+    font-size:14px;font-weight:600;z-index:9999;opacity:0;transition:all .25s;pointer-events:none;white-space:nowrap;`;
+  document.body.appendChild(t);
+  t.textContent = msg;
+  requestAnimationFrame(() => { t.style.opacity='1'; t.style.transform='translateX(-50%) translateY(0)'; });
+  setTimeout(() => { t.style.opacity='0'; setTimeout(()=>t.remove(), 300); }, 2400);
+}
+
+function fileToBase64(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res({ b64: r.result.split(',')[1], mime: file.type || 'image/jpeg' });
+    r.onerror = rej;
+    r.readAsDataURL(file);
+  });
+}
+
+// ─── CLAUDE API ──────────────────────────────────────────────────────────────
+
+async function extractWords(file) {
+  const { b64, mime } = await fileToBase64(file);
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': S.apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true',
+    },
+    body: JSON.stringify({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 2048,
+      messages: [{
+        role: 'user',
+        content: [
+          { type: 'image', source: { type: 'base64', media_type: mime, data: b64 } },
+          { type: 'text', text: `Tolka glosorna i denna bild. Det är sannolikt ett papper med ord och deras översättningar.
+
+Returnera ENBART ett JSON-objekt i detta format, inget annat text:
+{"words": [{"word": "originalord", "translation": "översättning"}]}
+
+Följ den ordning som orden skrivs i bilden.
+Om bilden visar t.ex. "dog - hund" → word="dog", translation="hund".
+Om det verkar vara en lista på ett språk utan tydlig översättning, gör ditt bästa.
+Returnera ENBART JSON.` },
+        ],
+      }],
+    }),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err?.error?.message || `HTTP ${res.status}`);
+  }
+  const data = await res.json();
+  const text = data.content[0].text.trim();
+  const match = text.match(/\{[\s\S]*\}/);
+  if (!match) throw new Error('Claude returnerade inget giltigt svar. Försök igen.');
+  return JSON.parse(match[0]).words || [];
+}
+
+// ─── HTML HELPERS ────────────────────────────────────────────────────────────
+
+function header({ title, back, rightHtml = '<div style="width:36px"></div>' }) {
+  const backEl = back
+    ? `<button class="back-btn" onclick="go('${back.view}',${JSON.stringify(back.params||{})})">&#8592; ${esc(back.label)}</button>`
+    : `<div style="width:80px"></div>`;
+  return `<header class="header">
+    <div class="container">${backEl}<h1>${title}</h1>${rightHtml}</div>
+  </header>`;
+}
+
+// ─── VIEW: HOME ──────────────────────────────────────────────────────────────
+
+function viewHome() {
+  const list = S.quizzes.length === 0
+    ? `<div class="empty-state">
+        <div class="empty-icon">📚</div>
+        <div class="empty-title">Inga läxförhör ännu</div>
+        <p>Skapa ditt första förhör med knappen nedan.</p>
+      </div>`
+    : [...S.quizzes].reverse().map(q => `
+        <div class="quiz-item" onclick="go('detail',{id:'${q.id}'})">
+          <div class="quiz-item-name">${esc(q.name)}</div>
+          <div class="quiz-item-meta">${q.words.length} glosor &middot; ${fmt(q.created)}</div>
+        </div>`).join('');
+
+  const warn = !S.apiKey
+    ? `<div class="alert alert-warning">&#9888; Ingen API-nyckel – gå till inställningar.</div>` : '';
+
+  return header({
+    title: 'Glosprov',
+    rightHtml: `<button class="header-icon-btn" title="Inställningar" onclick="go('settings')">&#9881;</button>`,
+  }) + `<main class="main"><div class="container stack">
+    ${warn}
+    <div class="stack">${list}</div>
+    <button class="btn btn-primary btn-full btn-lg" onclick="go('new')">+ Nytt läxförhör</button>
+  </div></main>`;
+}
+
+// ─── VIEW: SETTINGS ──────────────────────────────────────────────────────────
+
+function viewSettings() {
+  return header({ title: 'Inställningar', back: { view: 'home', label: 'Hem' } }) +
+  `<main class="main"><div class="container stack">
+    <div class="card card-body">
+      <div class="form-group">
+        <label>Anthropic API-nyckel</label>
+        <input type="password" id="apiKeyInput" value="${esc(S.apiKey)}" placeholder="sk-ant-..." autocomplete="off">
+      </div>
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">
+        Nyckeln sparas enbart i din webbläsare. Skaffa den på
+        <a href="https://console.anthropic.com" target="_blank" style="color:var(--primary)">console.anthropic.com</a>.
+      </p>
+      <button class="btn btn-primary btn-full" onclick="saveApiKey()">Spara nyckel</button>
+    </div>
+    ${S.quizzes.length > 0 ? `
+    <button class="btn btn-ghost btn-full" onclick="deleteAll()" style="color:var(--danger)">
+      Radera alla förhör
+    </button>` : ''}
+  </div></main>`;
+}
+
+function saveApiKey() {
+  S.apiKey = document.getElementById('apiKeyInput').value.trim();
+  persist();
+  toast('API-nyckel sparad', 'success');
+}
+
+function deleteAll() {
+  if (!confirm('Radera ALLA läxförhör? Det går inte att ångra.')) return;
+  S.quizzes = []; persist(); go('home');
+}
+
+// ─── VIEW: NEW QUIZ ───────────────────────────────────────────────────────────
+
+function viewNew() {
+  return header({ title: 'Nytt förhör', back: { view: 'home', label: 'Hem' } }) +
+  `<main class="main"><div class="container stack">
+    <div class="card card-body">
+      <p style="color:var(--text-muted);font-size:14px;margin-bottom:16px">
+        Fota ett papper med glosor. Claude AI läser av orden automatiskt.
+      </p>
+      <label class="upload-area" for="imgInput">
+        <div class="upload-icon">📷</div>
+        <div class="upload-text">Fota eller välj bild</div>
+        <div class="upload-sub">Tryck för att öppna kameran</div>
+      </label>
+      <input type="file" id="imgInput" accept="image/*" capture="environment"
+        style="display:none" onchange="onImagePicked(this)">
+    </div>
+  </div></main>`;
+}
+
+async function onImagePicked(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (!S.apiKey) { toast('Ange en API-nyckel i inställningarna', 'error'); return; }
+
+  const imgUrl = URL.createObjectURL(file);
+
+  document.getElementById('app').innerHTML =
+    header({ title: 'Tolkar bild…', back: { view: 'new', label: 'Avbryt' } }) +
+    `<main class="main"><div class="container stack">
+      <img src="${imgUrl}" class="image-preview">
+      <div class="card card-body loading">
+        <div class="spinner"></div>
+        <div style="font-weight:600">Claude tolkar glosorna…</div>
+        <div style="color:var(--text-muted);font-size:14px;margin-top:4px">Några sekunder</div>
+      </div>
+    </div></main>`;
+
+  try {
+    const words = await extractWords(file);
+    tempWords = words.map(w => ({ ...w, id: uid() }));
+    showEditWords(imgUrl);
+  } catch (e) {
+    document.getElementById('app').innerHTML =
+      header({ title: 'Fel', back: { view: 'new', label: 'Försök igen' } }) +
+      `<main class="main"><div class="container stack">
+        <img src="${imgUrl}" class="image-preview">
+        <div class="alert alert-error"><strong>Kunde inte tolka bilden:</strong><br>${esc(e.message)}</div>
+        <button class="btn btn-primary btn-full" onclick="go('new')">Försök igen</button>
+      </div></main>`;
+  }
+}
+
+function showEditWords(imgUrl) {
+  document.getElementById('app').innerHTML =
+    header({ title: 'Redigera glosor', back: { view: 'new', label: 'Avbryt' } }) +
+    `<main class="main"><div class="container stack">
+      <img src="${imgUrl}" class="image-preview">
+      <div class="card card-body">
+        <div class="form-group">
+          <label>Namn på förhöret</label>
+          <input type="text" id="quizName" placeholder="T.ex. Spanska vecka 3">
+        </div>
+      </div>
+      <div class="card card-body">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <span style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted)">
+            Glosor (<span id="wordCount">${tempWords.length}</span>)
+          </span>
+          <button class="btn btn-ghost" style="padding:4px 10px;font-size:13px" onclick="addWord()">+ Lägg till</button>
+        </div>
+        <div class="word-list" id="wordList">${buildWordList()}</div>
+      </div>
+      <button class="btn btn-primary btn-full btn-lg" onclick="saveQuiz()">Spara förhör</button>
+    </div></main>`;
+
+  document.getElementById('quizName').focus();
+}
+
+function buildWordList() {
+  return tempWords.map(w => `
+    <div class="word-item" data-id="${w.id}">
+      <input type="text" value="${esc(w.word)}" placeholder="Ord"
+        oninput="setWord('${w.id}','word',this.value)">
+      <span class="word-sep">→</span>
+      <input type="text" value="${esc(w.translation)}" placeholder="Översättning"
+        oninput="setWord('${w.id}','translation',this.value)">
+      <button class="word-del-btn" onclick="removeWord('${w.id}')" title="Ta bort">&#215;</button>
+    </div>`).join('');
+}
+
+function setWord(id, field, val) {
+  const w = tempWords.find(w => w.id === id);
+  if (w) w[field] = val;
+}
+
+function removeWord(id) {
+  tempWords = tempWords.filter(w => w.id !== id);
+  document.getElementById('wordList').innerHTML = buildWordList();
+  document.getElementById('wordCount').textContent = tempWords.length;
+}
+
+function addWord() {
+  tempWords.push({ id: uid(), word: '', translation: '' });
+  document.getElementById('wordList').innerHTML = buildWordList();
+  document.getElementById('wordCount').textContent = tempWords.length;
+  const inputs = document.querySelectorAll('.word-item:last-child input');
+  if (inputs[0]) inputs[0].focus();
+}
+
+function saveQuiz() {
+  const nameEl = document.getElementById('quizName');
+  const name = nameEl.value.trim();
+  if (!name) {
+    nameEl.style.borderColor = 'var(--danger)';
+    nameEl.focus();
+    return;
+  }
+  const words = tempWords
+    .filter(w => w.word.trim() || w.translation.trim())
+    .map(w => ({ word: w.word.trim(), translation: w.translation.trim() }));
+  if (words.length === 0) { toast('Lägg till minst en glosa', 'error'); return; }
+  const quiz = { id: uid(), name, created: new Date().toISOString(), words };
+  S.quizzes.push(quiz);
+  persist();
+  practiceCtx = null;
+  go('detail', { id: quiz.id });
+}
+
+// ─── VIEW: DETAIL ─────────────────────────────────────────────────────────────
+
+function viewDetail() {
+  const quiz = S.quizzes.find(q => q.id === S.params.id);
+  if (!quiz) return viewHome();
+
+  const rows = quiz.words.map(w => `
+    <div class="word-row">
+      <span class="word-orig">${esc(w.word)}</span>
+      <span class="word-trans">${esc(w.translation)}</span>
+    </div>`).join('');
+
+  return header({ title: esc(quiz.name), back: { view: 'home', label: 'Hem' } }) +
+  `<main class="main"><div class="container stack">
+    <div class="card card-body">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <span class="badge badge-primary">${quiz.words.length} glosor</span>
+        <span style="font-size:13px;color:var(--text-muted)">${fmt(quiz.created)}</span>
+      </div>
+      <button class="btn btn-primary btn-full btn-lg"
+        onclick="go('practice',{id:'${quiz.id}'})">&#128218; Starta förhör</button>
+    </div>
+    <div class="card card-body">
+      <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;
+        color:var(--text-muted);margin-bottom:8px">Alla glosor</div>
+      ${rows}
+    </div>
+    <button class="btn btn-ghost btn-full" onclick="deleteQuiz('${quiz.id}')"
+      style="color:var(--danger)">Radera förhör</button>
+  </div></main>`;
+}
+
+function deleteQuiz(id) {
+  if (!confirm('Radera detta läxförhör?')) return;
+  S.quizzes = S.quizzes.filter(q => q.id !== id);
+  persist(); go('home');
+}
+
+// ─── VIEW: PRACTICE ───────────────────────────────────────────────────────────
+
+function viewPractice() {
+  const quiz = S.quizzes.find(q => q.id === S.params.id);
+  if (!quiz) return viewHome();
+
+  if (!practiceCtx || practiceCtx.quizId !== quiz.id) {
+    practiceCtx = {
+      quizId: quiz.id,
+      words: [],
+      index: 0,
+      direction: 'wordFirst',
+      revealed: false,
+      correct: 0,
+      missed: [],
+      phase: 'setup',
+    };
+  }
+
+  if (practiceCtx.phase === 'setup')  return viewPracticeSetup(quiz);
+  if (practiceCtx.phase === 'result') return viewPracticeResult(quiz);
+  return viewPracticeQuestion(quiz);
+}
+
+function viewPracticeSetup(quiz) {
+  return header({ title: 'Förhör', back: { view: 'detail', label: esc(quiz.name), params: { id: quiz.id } } }) +
+  `<main class="main"><div class="container stack">
+    <div class="card card-body">
+      <div class="form-group">
+        <label>Riktning</label>
+        <div class="toggle-group" id="dirToggle">
+          <div class="toggle-opt active" onclick="setDir('wordFirst',this)">Ord → Översättning</div>
+          <div class="toggle-opt" onclick="setDir('translationFirst',this)">Översättning → Ord</div>
+        </div>
+      </div>
+      <button class="btn btn-primary btn-full btn-lg" onclick="startPractice()">Starta</button>
+    </div>
+    <div class="card card-body" style="text-align:center;color:var(--text-muted);font-size:14px">
+      ${quiz.words.length} glosor &middot; ${esc(quiz.name)}
+    </div>
+  </div></main>`;
+}
+
+function viewPracticeQuestion(quiz) {
+  const { words, index, direction, revealed } = practiceCtx;
+  const word   = words[index];
+  const front  = direction === 'wordFirst' ? word.word : word.translation;
+  const back   = direction === 'wordFirst' ? word.translation : word.word;
+  const pct    = (index / words.length) * 100;
+  const lbl    = direction === 'wordFirst' ? 'Vad är översättningen?' : 'Vad är originalordet?';
+
+  const answerArea = revealed
+    ? `<div class="fc-divider"></div>
+       <div class="fc-answer">${esc(back)}</div>
+       <div class="practice-btns" style="margin-top:24px">
+         <button class="btn btn-danger btn-lg" onclick="mark(false)">&#10008; Missade</button>
+         <button class="btn btn-success btn-lg" onclick="mark(true)">&#10004; Kunde!</button>
+       </div>`
+    : `<div class="fc-tap-hint" style="margin-top:14px">Tryck för att visa svar</div>`;
+
+  return header({ title: `${index+1} / ${words.length}`, back: { view: 'detail', label: esc(quiz.name), params: { id: quiz.id } } }) +
+  `<main class="main"><div class="container">
+    <div class="progress-wrap"><div class="progress-fill" style="width:${pct}%"></div></div>
+    <div class="card" style="margin-top:0">
+      <div class="flashcard" onclick="${revealed ? '' : 'reveal()'}">
+        <div class="fc-label">${lbl}</div>
+        <div class="fc-word">${esc(front)}</div>
+        ${answerArea}
+      </div>
+    </div>
+  </div></main>`;
+}
+
+function viewPracticeResult(quiz) {
+  const { correct, missed, words } = practiceCtx;
+  const total = words.length;
+  const pct   = Math.round((correct / total) * 100);
+  const emoji = pct >= 90 ? '🏆' : pct >= 70 ? '👍' : pct >= 50 ? '💪' : '📖';
+
+  const missedRows = missed.length > 0
+    ? `<div class="card" style="margin-top:4px"><div class="card-body">
+        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;
+          color:var(--text-muted);margin-bottom:8px">Att öva mer på</div>
+        ${missed.map(w => `
+          <div class="word-row">
+            <span class="word-orig">${esc(w.word)}</span>
+            <span class="word-trans">${esc(w.translation)}</span>
+          </div>`).join('')}
+      </div></div>` : '';
+
+  return header({ title: 'Resultat', back: { view: 'detail', label: esc(quiz.name), params: { id: quiz.id } } }) +
+  `<main class="main"><div class="container stack">
+    <div class="card card-body" style="text-align:center">
+      <div style="font-size:52px;margin-bottom:8px">${emoji}</div>
+      <div style="font-size:40px;font-weight:800;margin-bottom:4px">${pct}%</div>
+      <div style="color:var(--text-muted);margin-bottom:20px">rätt på ${total} glosor</div>
+      <div class="score-grid">
+        <div class="score-box score-correct">
+          <div class="score-num" style="color:var(--success)">${correct}</div>
+          <div class="score-lbl">Kände till</div>
+        </div>
+        <div class="score-box score-missed">
+          <div class="score-num" style="color:var(--danger)">${missed.length}</div>
+          <div class="score-lbl">Missade</div>
+        </div>
+      </div>
+      ${missed.length > 0
+        ? `<button class="btn btn-primary btn-full" onclick="retryMissed()">Öva på missade</button>
+           <div style="margin-top:8px"></div>` : ''}
+      <button class="btn btn-outline btn-full" onclick="restartSetup()">Gör om</button>
+    </div>
+    ${missedRows}
+  </div></main>`;
+}
+
+// ─── PRACTICE ACTIONS ─────────────────────────────────────────────────────────
+
+function setDir(dir, el) {
+  practiceCtx.direction = dir;
+  document.querySelectorAll('#dirToggle .toggle-opt').forEach(o => o.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function startPractice() {
+  const quiz = S.quizzes.find(q => q.id === practiceCtx.quizId);
+  practiceCtx.words    = shuf([...quiz.words]);
+  practiceCtx.index    = 0;
+  practiceCtx.correct  = 0;
+  practiceCtx.missed   = [];
+  practiceCtx.revealed = false;
+  practiceCtx.phase    = 'quiz';
+  render();
+}
+
+function reveal() {
+  practiceCtx.revealed = true;
+  render();
+}
+
+function mark(correct) {
+  const w = practiceCtx.words[practiceCtx.index];
+  if (correct) practiceCtx.correct++;
+  else practiceCtx.missed.push(w);
+  practiceCtx.index++;
+  practiceCtx.revealed = false;
+  if (practiceCtx.index >= practiceCtx.words.length) practiceCtx.phase = 'result';
+  render();
+}
+
+function retryMissed() {
+  practiceCtx.words    = shuf([...practiceCtx.missed]);
+  practiceCtx.index    = 0;
+  practiceCtx.correct  = 0;
+  practiceCtx.missed   = [];
+  practiceCtx.revealed = false;
+  practiceCtx.phase    = 'quiz';
+  render();
+}
+
+function restartSetup() {
+  practiceCtx.phase = 'setup';
+  render();
+}
+
+// ─── ROUTER ───────────────────────────────────────────────────────────────────
+
+function render() {
+  const views = { home: viewHome, settings: viewSettings, new: viewNew, detail: viewDetail, practice: viewPractice };
+  document.getElementById('app').innerHTML = (views[S.view] || viewHome)();
+  window.scrollTo(0, 0);
+}
+
+if (!S.apiKey) S.view = 'settings';
+render();
+</script>
+</body>
+</html>
