@@ -281,26 +281,20 @@ function fileToBase64(file) {
   });
 }
 
-// ─── CLAUDE API ──────────────────────────────────────────────────────────────
+// ─── GEMINI API ──────────────────────────────────────────────────────────────
 
 async function extractWords(file) {
   const { b64, mime } = await fileToBase64(file);
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': S.apiKey,
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true',
-    },
-    body: JSON.stringify({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 2048,
-      messages: [{
-        role: 'user',
-        content: [
-          { type: 'image', source: { type: 'base64', media_type: mime, data: b64 } },
-          { type: 'text', text: `Tolka glosorna i denna bild. Det är sannolikt ett papper med ord och deras översättningar.
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${encodeURIComponent(S.apiKey)}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{
+          parts: [
+            { inline_data: { mime_type: mime, data: b64 } },
+            { text: `Tolka glosorna i denna bild. Det är sannolikt ett papper med ord och deras översättningar.
 
 Returnera ENBART ett JSON-objekt i detta format, inget annat text:
 {"words": [{"word": "originalord", "translation": "översättning"}]}
@@ -309,19 +303,21 @@ Följ den ordning som orden skrivs i bilden.
 Om bilden visar t.ex. "dog - hund" → word="dog", translation="hund".
 Om det verkar vara en lista på ett språk utan tydlig översättning, gör ditt bästa.
 Returnera ENBART JSON.` },
-        ],
-      }],
-    }),
-  });
+          ],
+        }],
+      }),
+    }
+  );
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     throw new Error(err?.error?.message || `HTTP ${res.status}`);
   }
   const data = await res.json();
-  const text = data.content[0].text.trim();
+  const text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+  if (!text) throw new Error('Gemini returnerade inget giltigt svar. Försök igen.');
   const match = text.match(/\{[\s\S]*\}/);
-  if (!match) throw new Error('Claude returnerade inget giltigt svar. Försök igen.');
+  if (!match) throw new Error('Gemini returnerade inget giltigt svar. Försök igen.');
   return JSON.parse(match[0]).words || [];
 }
 
@@ -371,12 +367,12 @@ function viewSettings() {
   `<main class="main"><div class="container stack">
     <div class="card card-body">
       <div class="form-group">
-        <label>Anthropic API-nyckel</label>
-        <input type="password" id="apiKeyInput" value="${esc(S.apiKey)}" placeholder="sk-ant-..." autocomplete="off">
+        <label>Google Gemini API-nyckel</label>
+        <input type="password" id="apiKeyInput" value="${esc(S.apiKey)}" placeholder="AIza..." autocomplete="off">
       </div>
       <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">
         Nyckeln sparas enbart i din webbläsare. Skaffa den på
-        <a href="https://console.anthropic.com" target="_blank" style="color:var(--primary)">console.anthropic.com</a>.
+        <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--primary)">aistudio.google.com</a>.
       </p>
       <button class="btn btn-primary btn-full" onclick="saveApiKey()">Spara nyckel</button>
     </div>
@@ -405,7 +401,7 @@ function viewNew() {
   `<main class="main"><div class="container stack">
     <div class="card card-body">
       <p style="color:var(--text-muted);font-size:14px;margin-bottom:16px">
-        Fota ett papper med glosor. Claude AI läser av orden automatiskt.
+        Fota ett papper med glosor. Gemini AI läser av orden automatiskt.
       </p>
       <label class="upload-area" for="imgInput">
         <div class="upload-icon">📷</div>
@@ -431,7 +427,7 @@ async function onImagePicked(input) {
       <img src="${imgUrl}" class="image-preview">
       <div class="card card-body loading">
         <div class="spinner"></div>
-        <div style="font-weight:600">Claude tolkar glosorna…</div>
+        <div style="font-weight:600">Gemini tolkar glosorna…</div>
         <div style="color:var(--text-muted);font-size:14px;margin-top:4px">Några sekunder</div>
       </div>
     </div></main>`;
